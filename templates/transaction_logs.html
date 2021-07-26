@@ -1,0 +1,17 @@
+<div class="kui-flex-wrap">
+  <ul class="kui-list kai-container">
+    {{#logs}}
+    <li class="transNav">
+      <div class="kui-row-center">
+        <div>
+          <div>{{ _date }}</div>
+          <div>{{ _type }}</div>
+        </div>
+        <div>
+          <span>{{ unit }}{{ value }}</span>
+        </div>
+      </div>
+    </li>
+    {{/logs}}
+  </ul>
+</div>

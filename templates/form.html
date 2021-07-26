@@ -1,0 +1,25 @@
+<div class="kui-flex-wrap">
+  <style>
+    .txtarea {
+      width: 100%;
+      border-radius: 2px;
+      padding: 10px;
+      -moz-box-sizing: border-box;
+      box-sizing: border-box;
+      border: 1px solid #aaaaaa;
+    }
+  </style>
+  <ul class="kui-list kai-container">
+    <li>
+      <input id="amount" placeholder="Amount" class="formNav kui-input" type="tel" />
+    </li>
+    <li style="border-top:1px dashed #320374;height:114px;">
+      <textarea id="note" placeholder="Note" class="formNav txtarea" style="height:100px;" type="text"></textarea>
+    </li>
+    <li class="formNav" style="border-top:1px dashed #320374;" @click="submit()">
+      <div class="kui-row-center" style="justify-content:space-around;">
+        <h4>SUBMIT</h4>
+      </div>
+    </li>
+  </ul>
+</div>
