@@ -248,7 +248,9 @@ window.addEventListener("load", function() {
       center: function() {
         const selected = this.data.logs[this.verticalNavIndex];
         if (selected && selected['note'].length > 0) {
-          this.$router.showDialog('Note', selected['note'], null, ' ', () => {}, 'Close', () => {}, ' ', null, () => {});
+          this.$router.showDialog('Note', selected['note'], null, ' ', () => {}, 'Close', () => {}, ' ', null, () => {
+          setTimeout(this.methods.renderCenterText, 100);
+        });
         }
       },
       right: function() {
