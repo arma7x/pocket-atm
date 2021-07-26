@@ -147,8 +147,12 @@ window.addEventListener("load", function() {
     data: {
       title: 'transaction_logs',
       begin: new Date().getTime(),
+      _begin: new Date().toLocaleDateString(),
       end: new Date().getTime(),
+      _end: new Date().toLocaleDateString(),
       logs: [],
+      total_withdraw: 0,
+      total_deposit: 0,
       unit: '$',
     },
     verticalNavClass: '.transNav',
@@ -171,6 +175,12 @@ window.addEventListener("load", function() {
         end.setMinutes(59);
         end.setSeconds(59);
         end.setMilliseconds(999);
+        this.setData({
+          _begin: begin.toLocaleDateString(),
+          _end: end.toLocaleDateString(),
+          total_withdraw: 0,
+          total_deposit: 0,
+        });
         if (end.getTime() - begin.getTime() > 0) {
           this.verticalNavIndex = -1;
           localforage.getItem('__logs__')
@@ -178,6 +188,8 @@ window.addEventListener("load", function() {
             if (!__logs__) {
               __logs__ = [];
             }
+            var total_withdraw = 0;
+            var total_deposit = 0;
             var logs = [];
             var idx = 1;
             __logs__.forEach((l) => {
@@ -185,14 +197,23 @@ window.addEventListener("load", function() {
                 l['idx'] = idx;
                 l['_date'] = new Date(l['date']).toLocaleDateString();
                 l['_type'] = l['type'] === 1 ? 'Deposit' : 'Withdraw';
+                if (l['type'] === 1) {
+                  total_deposit += l['value'];
+                } else {
+                  total_withdraw += l['value'];
+                }
                 logs.push(l);
                 idx++;
               }
             });
-            this.setData({ logs: logs });
+            this.setData({
+              logs: logs,
+              total_withdraw: total_withdraw,
+              total_deposit: total_deposit,
+            });
             if (logs.length > 0) {
               this.verticalNavIndex = -1;
-              this.navigateListNav(1);
+              this.dPadNavListener.arrowDown();
             }
             this.$router.setHeaderTitle(`Transaction History(${logs.length})`);
           });
@@ -201,7 +222,6 @@ window.addEventListener("load", function() {
         }
       },
       renderCenterText: function() {
-        console.log(this.verticalNavIndex);
         if (this.verticalNavIndex > -1) {
           const selected = this.data.logs[this.verticalNavIndex];
           if (selected && selected['note'].length > 0) {
@@ -214,14 +234,16 @@ window.addEventListener("load", function() {
         }
       }
     },
-    softKeyText: { left: 'Begin', center: '', right: 'End' },
+    softKeyText: { left: 'From', center: '', right: 'To' },
     softKeyListener: {
       left: function() {
         var d = new Date(this.data.begin);
         this.$router.showDatePicker(d.getFullYear(), d.getMonth() + 1, d.getDate(), (dt) => {
           this.setData({ begin: dt.getTime() });
           this.methods.getTransaction();
-        }, this.methods.renderCenterText);
+        }, () => {
+          setTimeout(this.methods.renderCenterText, 100);
+        });
       },
       center: function() {
         const selected = this.data.logs[this.verticalNavIndex];
@@ -234,7 +256,9 @@ window.addEventListener("load", function() {
         this.$router.showDatePicker(d.getFullYear(), d.getMonth() + 1, d.getDate(), (dt) => {
           this.setData({ end: dt.getTime() });
           this.methods.getTransaction();
-        }, this.methods.renderCenterText);
+        }, () => {
+          setTimeout(this.methods.renderCenterText, 100);
+        });
       }
     },
     dPadNavListener: {
