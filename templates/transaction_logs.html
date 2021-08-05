@@ -4,21 +4,23 @@
       width:100%;display:flex;flex-direction:row;justify-content:space-between;align-items:center;align-content:space-between;
     }
   </style>
-  <div class="kai-container" style="font-size:72%;font-weight:bold;padding:4px;height:48px;max-height:48px;background-color:#320374;color:#fff;display:flex;flex-direction:column;justify-content:space-between;align-items:center;align-content:space-between;">
-    <div class="h-row">
+  <div class="kai-container transNav" style="font-size:72%;font-weight:bold;padding:0px 4px;height:60px;max-height:60px;background-color:#320374;color:#fff;display:flex;flex-direction:column;justify-content:space-between;align-items:center;align-content:space-between;">
+    <span class="sr-only">{{ logs_length }} Transaction History from {{ _sr_begin }}, to {{ _sr_end }}, Total Withdraw is {{ unit }}{{ total_withdraw }}, Total Deposit is {{ unit }}{{ total_deposit }}, Left Key to set Begin date, Right Key to set End date, Arrow Up or Arrow Down to navigate between transaction,</span>
+    <div aria-hidden="true" class="h-row" style="margin-top:2px;">
       <div>Total Withdraw</div><div>{{ unit }}{{ total_withdraw }}</div>
     </div>
-    <div class="h-row">
+    <div aria-hidden="true" class="h-row">
       <div>Total Deposit</div><div>{{ unit }}{{ total_deposit }}</div>
     </div>
-    <div class="h-row">
+    <div aria-hidden="true" class="h-row" style="margin-bottom:2px;">
       <div>From: {{ _begin }}</div><div>To: {{ _end }}</div>
     </div>
   </div>
   <ul class="kui-list kai-container" style="max-height:180px;">
     {{#logs}}
     <li class="transNav">
-      <div style="width:100%;">
+      <span class="sr-only">{{ idx }}. {{ _date }}, {{ _type }}, {{ unit }}{{ value }}, {{_note}}</span>
+      <div style="width:100%;" aria-hidden="true">
         <div class="h-row">
           <div>{{ idx }}. {{ _date }}</div>
           <div>[{{ _type }}]</div>

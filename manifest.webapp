@@ -1,7 +1,7 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "Pocket ATM",
-  "description": "Manage money in your pocket & track your spending. Personal ATM also provide spending statistic by daily, monthly or yearly",
+  "description": "Manage money in your pocket & track your spending. Pocket ATM also provide transaction statistic by daily, monthly or yearly",
   "launch_path": "/index.html",
   "theme": "#873eff",
   "theme_color": "#873eff",
@@ -19,13 +19,21 @@
   },
   "origin": "app://pocket-atm.arma7x.com",
   "type": "web",
-  "permissions": {},
-  "messages": [],
+  "permissions": {
+    "desktop-notification": {
+      "description": "Required for displaying alerts when app is on background"
+    }
+  },
+  "messages": [
+    {
+      "serviceworker-notification": "/index.html"
+    }
+  ],
   "locales": {
     "en-US": {
       "name": "Pocket ATM",
-      "subtitle": "Manage money in your pocket & track your spending. Personal ATM also provide spending statistic by daily, monthly or yearly",
-      "description": "Manage money in your pocket & track your spending. Personal ATM also provide spending statistic by daily, monthly or yearly"
+      "subtitle": "Manage money in your pocket & track your spending. Pocket ATM also provide transaction statistic by daily, monthly or yearly",
+      "description": "Manage money in your pocket & track your spending. Pocket ATM also provide transaction statistic by daily, monthly or yearly"
     }
   },
   "default_locale": "en-US"

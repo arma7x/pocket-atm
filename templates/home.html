@@ -12,17 +12,21 @@
   }
   </style>
   <div class="kai-container">
-    <div style="background-color:#fff;color:#320374;padding:10px;border-radius:5px;box-shadow: 0 4px 8px 0 rgba(255, 255, 255, 0.2), 0 6px 20px 0 rgba(255, 255, 255, 0.19);margin-top:5px;">
+    <span tabIndex="0" class="homeNav sr-only">You at Homescreen, Press Arrow Up or Arrow Down to navigate between menu, Press Enter for Menu, Left Key for Deposit, and Right Key for Withdraw,</span>
+    <span tabIndex="1" class="homeNav sr-only">{{ sr_tb }}</span>
+    <span tabIndex="2" class="homeNav sr-only">{{ sr_td }}</span>
+    <span tabIndex="3" class="homeNav sr-only">{{ sr_tw }}</span>
+    <div aria-hidden="true" style="background-color:#fff;color:#320374;padding:10px;border-radius:5px;box-shadow: 0 4px 8px 0 rgba(255, 255, 255, 0.2), 0 6px 20px 0 rgba(255, 255, 255, 0.19);margin-top:5px;">
       <h5 class="kai-text-center">Balance</h5>
       <h1 class="kai-text-center">{{ unit }}{{ total_balance }}</h1>
       <h5 class="kai-text-center">[{{ unit }}{{ _total_balance }}]</h5>
     </div>
-    <div style="margin-top:10px;">
+    <div aria-hidden="true" style="margin-top:10px;">
       <h5 class="kai-text-center">Total Deposit</h5>
       <h3 class="kai-text-center">{{ unit }}{{ total_deposit }}</h3>
       <h5 class="kai-text-center">[{{ unit }}{{ _total_deposit }}]</h5>
     </div>
-    <div style="margin-top:10px;">
+    <div aria-hidden="true" style="margin-top:10px;">
       <h5 class="kai-text-center">Total Withdraw</h5>
       <h3 class="kai-text-center">{{ unit }}{{ total_withdraw }}</h3>
       <h5 class="kai-text-center">[{{ unit }}{{ _total_withdraw }}]</h5>

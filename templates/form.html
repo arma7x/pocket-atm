@@ -11,14 +11,14 @@
   </style>
   <ul class="kui-list kai-container">
     <li>
-      <input id="amount" placeholder="Amount" class="formNav kui-input" type="tel" />
+      <input id="amount" name="amount" placeholder="Enter amount of {{ type }}" class="formNav kui-input" type="tel" />
     </li>
     <li style="border-top:1px dashed #320374;height:114px;">
-      <textarea id="note" placeholder="Note" class="formNav txtarea" style="height:100px;" type="text"></textarea>
+      <textarea id="note" name="note" placeholder="Note of transaction(optional)" class="formNav txtarea" style="height:100px;" type="text"></textarea>
     </li>
     <li class="formNav" style="border-top:1px dashed #320374;" @click="submit()">
       <div class="kui-row-center" style="justify-content:space-around;">
-        <h4>SUBMIT</h4>
+        <h4>SUBMIT TRANSACTION</h4>
       </div>
     </li>
   </ul>

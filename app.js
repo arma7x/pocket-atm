@@ -1,3 +1,25 @@
+const pushLocalNotification = function(text) {
+  window.Notification.requestPermission().then(function(result) {
+    var notification = new window.Notification(text);
+      notification.onclick = function(event) {
+        if (window.navigator.mozApps) {
+          var request = window.navigator.mozApps.getSelf();
+          request.onsuccess = function() {
+            if (request.result) {
+              notification.close();
+              request.result.launch();
+            }
+          };
+        } else {
+          window.open(document.location.origin, '_blank');
+        }
+      }
+      notification.onshow = function() {
+        notification.close();
+      }
+  });
+}
+
 function nFormatter(num) {
   if (num >= 1000000000000) {
     return (num / 1000000000000).toFixed(1).replace(/\.0$/, '') + 'T';
@@ -80,7 +102,7 @@ window.addEventListener("load", function() {
         });
         total_balance = total_deposit - total_withdraw;
         if (value > total_balance && type === 0) {
-          return Promise.reject('Insufficient balance');
+          return Promise.reject('Insufficient Balance');
         } else {
           var data = { date: date, type: type, value: value, note: note };
           __logs__.push(data);
@@ -104,7 +126,7 @@ window.addEventListener("load", function() {
         }
       })
       .then(() => {
-        return Promise.resolve('Transaction done');
+        return Promise.resolve('Transaction Done');
       })
       .catch((err) => {
         return Promise.reject(err);
@@ -146,10 +168,13 @@ window.addEventListener("load", function() {
     name: 'transaction_logs',
     data: {
       title: 'transaction_logs',
+      logs_length: 0,
       begin: new Date().getTime(),
       _begin: new Date().toLocaleDateString(),
+      _sr_begin: '',
       end: new Date().getTime(),
       _end: new Date().toLocaleDateString(),
+      _sr_end: '',
       logs: [],
       total_withdraw: 0,
       total_deposit: 0,
@@ -176,6 +201,8 @@ window.addEventListener("load", function() {
         end.setSeconds(59);
         end.setMilliseconds(999);
         this.setData({
+          _sr_begin: begin.toDateString(),
+          _sr_end: end.toDateString(),
           _begin: begin.toLocaleDateString(),
           _end: end.toLocaleDateString(),
           total_withdraw: 0,
@@ -195,13 +222,15 @@ window.addEventListener("load", function() {
             __logs__.forEach((l) => {
               if (l['date'] >= begin.getTime() && l['date'] <= end.getTime()) {
                 l['idx'] = idx;
-                l['_date'] = new Date(l['date']).toLocaleDateString();
+                l['_date'] = new Date(l['date']).toDateString();
                 l['_type'] = l['type'] === 1 ? 'Deposit' : 'Withdraw';
                 if (l['type'] === 1) {
                   total_deposit += l['value'];
                 } else {
                   total_withdraw += l['value'];
                 }
+                console.log(l['note']);
+                l['_note'] = l['note'].length > 0 ? ' Press Enter to listen for transaction notes,' : '';
                 logs.push(l);
                 idx++;
               }
@@ -210,6 +239,7 @@ window.addEventListener("load", function() {
               logs: logs,
               total_withdraw: total_withdraw,
               total_deposit: total_deposit,
+              logs_length: logs.length,
             });
             if (logs.length > 0) {
               this.verticalNavIndex = -1;
@@ -223,7 +253,7 @@ window.addEventListener("load", function() {
       },
       renderCenterText: function() {
         if (this.verticalNavIndex > -1) {
-          const selected = this.data.logs[this.verticalNavIndex];
+          const selected = this.data.logs[this.verticalNavIndex - 1];
           if (selected && selected['note'].length > 0) {
             this.$router.setSoftKeyCenterText('NOTE');
           } else {
@@ -234,7 +264,7 @@ window.addEventListener("load", function() {
         }
       }
     },
-    softKeyText: { left: 'From', center: '', right: 'To' },
+    softKeyText: { left: 'Begin', center: '', right: 'End' },
     softKeyListener: {
       left: function() {
         var d = new Date(this.data.begin);
@@ -246,8 +276,9 @@ window.addEventListener("load", function() {
         });
       },
       center: function() {
-        const selected = this.data.logs[this.verticalNavIndex];
+        const selected = this.data.logs[this.verticalNavIndex - 1];
         if (selected && selected['note'].length > 0) {
+          pushLocalNotification(selected['note'] + ', press Left key to return');
           this.$router.showDialog('Note', selected['note'], null, ' ', () => {}, 'Close', () => {}, ' ', null, () => {
           setTimeout(this.methods.renderCenterText, 100);
         });
@@ -282,6 +313,7 @@ window.addEventListener("load", function() {
         data: {
           amount: '',
           note: '',
+          type: type ? 'deposit' : 'withdraw'
         },
         verticalNavClass: '.formNav',
         templateUrl: document.location.origin + '/templates/form.html',
@@ -293,11 +325,13 @@ window.addEventListener("load", function() {
           submit: function() {
             commitTransaction(new Date().getTime(), type ? 1 : 0, document.getElementById('amount').value, document.getElementById('note').value.trim())
             .then((success) => {
-              $router.showToast(success.toString());
+              pushLocalNotification(success.toString());
+              //$router.showToast(success.toString());
               $router.pop();
             })
             .catch((err) => {
-              $router.showToast(err.toString());
+              pushLocalNotification(err.toString());
+              //$router.showToast(err.toString());
             });
           }
         },
@@ -337,7 +371,11 @@ window.addEventListener("load", function() {
       _total_deposit: 0,
       total_withdraw: 0,
       _total_withdraw: 0,
+      sr_tb: '',
+      sr_td: '',
+      sr_tw: '',
     },
+    verticalNavClass: '.homeNav',
     components: [],
     templateUrl: document.location.origin + '/templates/home.html',
     mounted: function() {
@@ -351,9 +389,13 @@ window.addEventListener("load", function() {
         '_total_deposit': this.$state.getState('total_deposit').toFixed(2),
         'total_withdraw': nFormatter(this.$state.getState('total_withdraw')),
         '_total_withdraw': this.$state.getState('total_withdraw').toFixed(2),
+        'sr_tb': `Total Balance, ${this.$state.getState('unit')}, ${this.$state.getState('total_balance').toFixed(2)}`,
+        'sr_td': `Total Deposit, ${this.$state.getState('unit')}, ${this.$state.getState('total_deposit').toFixed(2)}`,
+        'sr_tw': `Total Withdraw, ${this.$state.getState('unit')}, ${this.$state.getState('total_withdraw').toFixed(2)}`,
       });
     },
     unmounted: function() {
+      this.verticalNavIndex = -1;
       this.$state.removeGlobalListener(this.methods.listenState);
     },
     methods: {
@@ -375,6 +417,8 @@ window.addEventListener("load", function() {
         commitWithdrawOrDeposit(this.$router, true);
       },
       center: function() {
+        this.verticalNavIndex = -1;
+        document.activeElement.classList.remove('focus');
         var menus = [
           { "text": "Transaction History" },
           { "text": "Currency Unit" },
@@ -382,17 +426,19 @@ window.addEventListener("load", function() {
         ];
         this.$router.showOptionMenu('Menu', menus, 'Select', (selected) => {
           if (selected.text === 'Currency Unit') {
-            const searchDialog = Kai.createDialog('Currency Unit', '<div><input id="currency-input" placeholder="Enter your currency unit" class="kui-input" type="text" /></div>', null, '', undefined, '', undefined, '', undefined, undefined, this.$router);
+            const searchDialog = Kai.createDialog('Currency Unit', '<label class="sr-only" for="currency-input">Enter your currency unit, Left Key to Cancel, Right Key to Update,</label><div><input id="currency-input" name="currency-input" placeholder="Enter your currency unit" class="kui-input" type="text" /></div>', null, '', undefined, '', undefined, '', undefined, undefined, this.$router);
             searchDialog.mounted = () => {
               setTimeout(() => {
                 setTimeout(() => {
                   this.$router.setSoftKeyText('Cancel' , '', 'Update');
+                  UNIT_INPUT.focus();
                 }, 103);
                 const UNIT_INPUT = document.getElementById('currency-input');
                 if (!UNIT_INPUT) {
                   return;
                 }
                 UNIT_INPUT.focus();
+                UNIT_INPUT.value = this.$state.getState('unit');
                 UNIT_INPUT.addEventListener('keydown', (evt) => {
                   switch (evt.key) {
                     case 'Backspace':
@@ -438,12 +484,37 @@ window.addEventListener("load", function() {
           } else if (selected.text === 'Transaction History') {
             this.$router.push('transaction_logs');
           }
+        }, () => {
+          const main = this.$router.stack[app.$router.stack.length - 1];
+          if (main.name === 'home') {
+            this.navigateListNav(1);
+          }
         });
       },
       right: function() {
         commitWithdrawOrDeposit(this.$router, false);
       }
     },
+    dPadNavListener: {
+      arrowUp: function() {
+        this.navigateListNav(-1);
+      },
+      arrowRight: function() {
+        // this.navigateTabNav(-1);
+      },
+      arrowDown: function() {
+        this.navigateListNav(1);
+      },
+      arrowLeft: function() {
+        // this.navigateTabNav(1);
+      }
+    },
+    backKeyListener: function() {
+      if (document.activeElement) {
+        document.activeElement.classList.remove('focus');
+        this.verticalNavIndex = -1;
+      }
+    }
   });
 
   const router = new KaiRouter({
@@ -497,7 +568,20 @@ window.addEventListener("load", function() {
       slot: 'kaios',
       onerror: err => console.error(err),
       onready: ad => {
-        ad.call('display')
+        if (document.activeElement) {
+          document.activeElement.classList.remove('focus');
+        }
+        ad.call('display');
+        ad.on('close', () => {
+          const screen = app.$router.stack[app.$router.stack.length - 1];
+          if (screen) {
+            screen.verticalNavIndex = -1;
+            setTimeout(() => {
+              screen.navigateListNav(1);
+            }, 200);
+          }
+        });
+        pushLocalNotification('Ads was displayed, press Left key to close');
         setTimeout(() => {
           document.body.style.position = '';
         }, 1000);
@@ -509,7 +593,13 @@ window.addEventListener("load", function() {
 
   document.addEventListener('visibilitychange', function(ev) {
     if (document.visibilityState === 'visible') {
-      displayKaiAds();
+      const main = app.$router.stack[app.$router.stack.length - 1];
+      if (main.name === 'home') {
+        if (main.verticalNavIndex === -1) {
+          main.navigateListNav(1);
+          displayKaiAds();
+        }
+      }
     }
   });
 
