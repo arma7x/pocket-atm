@@ -45,6 +45,17 @@ window.addEventListener("load", function() {
     'total_balance': 0,
     'total_deposit': 0,
     'total_withdraw': 0,
+    'deficit_spending': false,
+  });
+
+  localforage.getItem('__deficit_spending__')
+  .then((__deficit_spending__) => {
+    if (!__deficit_spending__) {
+      __deficit_spending__ = false;
+      state.setState('deficit_spending', __deficit_spending__);
+      localforage.setItem('__deficit_spending__', __deficit_spending__);
+    }
+    state.setState('deficit_spending', __deficit_spending__);
   });
 
   localforage.getItem('__unit__')
@@ -101,7 +112,7 @@ window.addEventListener("load", function() {
           }
         });
         total_balance = total_deposit - total_withdraw;
-        if (value > total_balance && type === 0) {
+        if (value > total_balance && !state.getState('deficit_spending') && type === 0) {
           return Promise.reject('Insufficient Balance');
         } else {
           var data = { date: date, type: type, value: value, note: note };
@@ -229,7 +240,6 @@ window.addEventListener("load", function() {
                 } else {
                   total_withdraw += l['value'];
                 }
-                console.log(l['note']);
                 l['_note'] = l['note'].length > 0 ? ' Press Enter to listen for transaction notes,' : '';
                 logs.push(l);
                 idx++;
@@ -278,8 +288,8 @@ window.addEventListener("load", function() {
       center: function() {
         const selected = this.data.logs[this.verticalNavIndex - 1];
         if (selected && selected['note'].length > 0) {
-          pushLocalNotification(selected['note'] + ', press Left key to return');
-          this.$router.showDialog('Note', selected['note'], null, ' ', () => {}, 'Close', () => {}, ' ', null, () => {
+          //pushLocalNotification(selected['note'] + ', press Left key to return');
+          this.$router.showDialog('Note', `<div class="kai-list-nav"><span class="sr-only">Listen for note. ${selected['note']}. Press Left Key to close,</span><span aria-hidden="true">${selected['note']}</span></div>`, null, ' ', () => {}, 'Close', () => {}, ' ', null, () => {
           setTimeout(this.methods.renderCenterText, 100);
         });
         }
@@ -325,9 +335,13 @@ window.addEventListener("load", function() {
           submit: function() {
             commitTransaction(new Date().getTime(), type ? 1 : 0, document.getElementById('amount').value, document.getElementById('note').value.trim())
             .then((success) => {
+              document.getElementById('amount').value = '';
+              document.getElementById('note').value = '';
               pushLocalNotification(success.toString());
               //$router.showToast(success.toString());
-              $router.pop();
+              setTimeout(() => {
+                $router.pop();
+              }, 3000);
             })
             .catch((err) => {
               pushLocalNotification(err.toString());
@@ -422,6 +436,7 @@ window.addEventListener("load", function() {
         var menus = [
           { "text": "Transaction History" },
           { "text": "Currency Unit" },
+          { "text": this.$state.getState('deficit_spending') ? "Disable Deficit Spending" : "Enable Deficit Spending" },
           { "text": "Exit" },
         ];
         this.$router.showOptionMenu('Menu', menus, 'Select', (selected) => {
@@ -479,10 +494,15 @@ window.addEventListener("load", function() {
               }
             }
             this.$router.showBottomSheet(searchDialog);
-          } else if (selected.text === 'Exit') {
-            window.close();
           } else if (selected.text === 'Transaction History') {
             this.$router.push('transaction_logs');
+          } else if (selected.text === 'Enable Deficit Spending' || selected.text === 'Disable Deficit Spending') {
+            const val = !this.$state.getState('deficit_spending');
+            this.$state.setState('deficit_spending', val);
+            localforage.setItem('__deficit_spending__', val);
+          } else if (selected.text === 'Exit') {
+            pushLocalNotification(`App was closed`);
+            window.close();
           }
         }, () => {
           const main = this.$router.stack[app.$router.stack.length - 1];
