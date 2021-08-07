@@ -601,10 +601,13 @@ window.addEventListener("load", function() {
             }, 200);
           }
         });
-        pushLocalNotification('Ads was displayed, press Left key to close');
-        setTimeout(() => {
+        ad.on('display', () => {
           document.body.style.position = '';
-        }, 1000);
+          if (app.$router.bottomSheet) {
+            app.$router.hideBottomSheet();
+          }
+          app.$router.showDialog('KaiAds', `<div class="kai-list-nav"><span class="sr-only">Ads was displayed. press Left key to close.</span><span aria-hidden="true">Ads was displayed, press Left key to close</span></div>`, null, ' ', () => {}, 'Close', () => {}, ' ', () => {}, () => {});
+        });
       }
     })
   }
