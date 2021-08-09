@@ -329,9 +329,19 @@ window.addEventListener("load", function() {
         templateUrl: document.location.origin + '/templates/form.html',
         mounted: function() {
           this.$router.setHeaderTitle(`${type ? 'Deposit' : 'Withdraw'}`);
+          document.addEventListener('keydown', this.methods.listenCallButton);
         },
-        unmounted: function() {},
+        unmounted: function() {
+          document.removeEventListener('keydown', this.methods.listenCallButton);
+        },
         methods: {
+          listenCallButton: function(evt) {
+            if (evt.key == 'Call' && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+              if (document.activeElement.value || document.activeElement.value != '') {
+                pushLocalNotification(`Input value is ${document.activeElement.value}`);
+              }
+            }
+          },
           submit: function() {
             commitTransaction(new Date().getTime(), type ? 1 : 0, document.getElementById('amount').value, document.getElementById('note').value.trim())
             .then((success) => {
