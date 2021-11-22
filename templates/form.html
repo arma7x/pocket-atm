@@ -10,15 +10,15 @@
     }
   </style>
   <ul class="kui-list kai-container">
-    <li>
+    <li class="kui-divider">
       <label for="amount" class="sr-only">Enter amount of {{ type }}. Press Call Button to listen for amount.</label>
       <input id="amount" name="amount" placeholder="Enter amount of {{ type }}" class="formNav kui-input" type="tel" />
-    </li>
-    <li style="border-top:1px dashed #320374;height:114px;">
+    </li class="kui-divider">
+    <li class="kui-divider" style="height:116px;">
       <label id="note-sr" class="sr-only">Note of transaction(optional). Press Call Button to listen for transaction note.</label>
       <textarea aria-labelledby="note-sr" id="note" name="note" placeholder="Note of transaction(optional)" class="formNav txtarea" style="height:100px;" type="text"></textarea>
     </li>
-    <li class="formNav" style="border-top:1px dashed #320374;" @click="submit()">
+    <li class="formNav kui-divider" @click="submit()">
       <div class="kui-row-center" style="justify-content:space-around;">
         <h4>SUBMIT TRANSACTION</h4>
       </div>

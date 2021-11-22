@@ -603,6 +603,7 @@ window.addEventListener("load", function() {
         }
         ad.call('display');
         ad.on('close', () => {
+          document.body.style.position = '';
           const screen = app.$router.stack[app.$router.stack.length - 1];
           if (screen) {
             screen.verticalNavIndex = -1;
