@@ -1,3 +1,5 @@
+const APP_VERSION = '1.3.0';
+
 const pushLocalNotification = function(text) {
   window.Notification.requestPermission().then(function(result) {
     var notification = new window.Notification(text);
@@ -38,7 +40,10 @@ function nFormatter(num) {
 
 window.addEventListener("load", function() {
 
-  localforage.setDriver(localforage.LOCALSTORAGE);
+  let STORAGE_TYPE = window.localStorage.getItem('STORAGE_TYPE');
+  STORAGE_TYPE = [localforage.LOCALSTORAGE, localforage.INDEXEDDB].indexOf(STORAGE_TYPE) > -1 ? STORAGE_TYPE : localforage.LOCALSTORAGE
+  console.log('STORAGE_TYPE', STORAGE_TYPE);
+  localforage.setDriver(STORAGE_TYPE);
 
   const state = new KaiState({
     'unit': '$',
@@ -197,9 +202,23 @@ window.addEventListener("load", function() {
       this.data.unit = this.$state.getState('unit');
       this.$router.setHeaderTitle('Transaction History(0)');
       this.methods.getTransaction();
+      document.addEventListener('keydown', this.methods.exportTransaction);
     },
-    unmounted: function() {},
+    unmounted: function() {
+      document.removeEventListener('keydown', this.methods.exportTransaction);
+    },
     methods: {
+      exportTransaction: function(evt) {
+        if (evt.key == 'Call') {
+          let csvText = "ID;Date;Amount;Note";
+          this.data.logs.forEach(item => {
+            csvText += `\n${item.date};${item._date};${item.type == 0 ? 0 - item.value : item.value};${item.note}`
+          });
+          const csvBlob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' });
+          const filename = `Transaction_${new Date(this.data.begin).toDateString()}_${new Date(this.data.end).toDateString()}.csv`;
+          saveAs(csvBlob, filename);
+        }
+      },
       getTransaction: function() {
         var begin = new Date(this.data.begin);
         begin.setHours(0);
@@ -384,6 +403,25 @@ window.addEventListener("load", function() {
     );
   }
 
+  const changelogs = new Kai({
+    name: 'changelogs',
+    data: {
+      title: 'changelogs'
+    },
+    templateUrl: document.location.origin + '/templates/changelogs.html',
+    mounted: function() {
+      this.$router.setHeaderTitle('Changelogs');
+    },
+    unmounted: function() {},
+    methods: {},
+    softKeyText: { left: '', center: '', right: '' },
+    softKeyListener: {
+      left: function() {},
+      center: function() {},
+      right: function() {}
+    }
+  });
+
   const home = new Kai({
     name: 'home',
     data: {
@@ -417,20 +455,30 @@ window.addEventListener("load", function() {
         'sr_td': `Total Deposit, ${this.$state.getState('unit')}, ${this.$state.getState('total_deposit').toFixed(2)}`,
         'sr_tw': `Total Withdraw, ${this.$state.getState('unit')}, ${this.$state.getState('total_withdraw').toFixed(2)}`,
       });
+      const CURRENT_VERSION = window.localStorage.getItem('APP_VERSION');
+      if (APP_VERSION != CURRENT_VERSION) {
+        this.$router.showToast(`Updated to version ${APP_VERSION}`);
+        this.$router.push('changelogs');
+        window.localStorage.setItem('APP_VERSION', APP_VERSION);
+        return;
+      }
     },
     unmounted: function() {
       this.verticalNavIndex = -1;
       this.$state.removeGlobalListener(this.methods.listenState);
     },
     methods: {
-      listenState: function(k, v) {
+      listenState: function(data) {
         var obj = {};
-        try {
-          JSON.parse(v);
-          obj[k] = nFormatter(v)
-          obj[`_${k}`] = v.toFixed(2);
-        } catch(e){
-          obj[k] = v;
+        for (var k in data) {
+          const v = data[k];
+          try {
+            JSON.parse(v);
+            obj[k] = nFormatter(v)
+            obj[`_${k}`] = v.toFixed(2);
+          } catch(e){
+            obj[k] = v;
+          }
         }
         this.setData(obj);
       },
@@ -447,6 +495,8 @@ window.addEventListener("load", function() {
           { "text": "Transaction History" },
           { "text": "Currency Unit" },
           { "text": this.$state.getState('deficit_spending') ? "Disable Deficit Spending" : "Enable Deficit Spending" },
+          { "text": "Changelogs" },
+          // { "text": "Migrate to IndexDB", "subtext": `Current: ${STORAGE_TYPE === localforage.INDEXEDDB ? 'IndexDB' : 'LocalStorage'}` },
           { "text": "Exit" },
         ];
         this.$router.showOptionMenu('Menu', menus, 'Select', (selected) => {
@@ -510,6 +560,12 @@ window.addEventListener("load", function() {
             const val = !this.$state.getState('deficit_spending');
             this.$state.setState('deficit_spending', val);
             localforage.setItem('__deficit_spending__', val);
+          } else if (selected.text === 'Changelogs') {
+            this.$router.push('changelogs');
+          } else if (selected.text === "Migrate to IndexDB") {
+            // '__deficit_spending__'
+            // '__unit__'
+            // '__logs__'
           } else if (selected.text === 'Exit') {
             pushLocalNotification(`App was closed`);
             window.close();
@@ -558,6 +614,10 @@ window.addEventListener("load", function() {
         name: 'transaction_logs',
         component: transaction_logs
       },
+      'changelogs' : {
+        name: 'changelogs',
+        component: changelogs
+      }
     }
   });
 
